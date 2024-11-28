@@ -25,7 +25,6 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 
 	return p
-
 }
 
 func (p *Parser) nextToken() {
@@ -46,13 +45,14 @@ func (p *Parser) ParseProgram() *ast.Program {
 	}
 
 	return program
-
 }
 
 func (p *Parser) ParseStatement() ast.Statement {
 	switch p.currentToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -72,6 +72,20 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	}
 
 	//For now we're skipping the expression
+	for !p.currentTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return statement
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	statement := &ast.ReturnStatement{Token: p.currentToken}
+
+	p.nextToken()
+
+	// skipping expression for now
+
 	for !p.currentTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
