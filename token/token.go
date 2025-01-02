@@ -41,6 +41,8 @@ const (
 	SLASH    = "/"
 	LT       = "<"
 	GT       = ">"
+	LTOE     = "<="
+	GTOE     = ">="
 	EQ       = "=="
 	NOT_EQ   = "!="
 
