@@ -28,6 +28,8 @@ func TestNextToken(t *testing.T) {
 			10 != 9;
 			2 <= 3;
 			6 >= 7;
+			"foobar"
+			"foo bar"
 	`
 
 	tests := []struct {
@@ -115,6 +117,8 @@ func TestNextToken(t *testing.T) {
 		{token.GTOE, ">="},
 		{token.INT, "7"},
 		{token.SEMICOLON, ";"},
+		{token.STRING, "foobar"},
+		{token.STRING, "foo bar"},
 		{token.EOF, ""},
 	}
 
