@@ -77,11 +77,16 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 }
 
 func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return newError("identifier not found: " + node.Value)
+	if val, ok := env.Get(node.Value); ok {
+		return val
 	}
-	return val
+
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+
+	return newError("identifier not found: " + node.Value)
+
 }
 
 func evalInfixExpression(operator string, left object.Object, right object.Object) object.Object {
@@ -276,19 +281,20 @@ func isError(obj object.Object) bool {
 }
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
-	function, ok := fn.(*object.Function)
-	if !ok {
-		return newError("not a function: %s", fn.Type())
+
+	switch function := fn.(type) {
+	case *object.Function:
+		if len(function.Parameters) != len(args) {
+			return newError("incorrect number of arguments: Expected %v, got %v", len(function.Parameters), len(args))
+		}
+		extendedEnv := extendFunctionEnv(function, args)
+		evaluated := Eval(function.Body, extendedEnv)
+		return unwrapReturnValue(evaluated)
+	case *object.Builtin:
+		return function.Fn(args...)
 	}
 
-	if len(function.Parameters) != len(args) {
-		return newError("incorrect number of arguments: Expected %v, got %v", len(function.Parameters), len(args))
-	}
-
-	extendedEnv := extendFunctionEnv(function, args)
-	evaluated := Eval(function.Body, extendedEnv)
-
-	return unwrapReturnValue(evaluated)
+	return newError("not a function: %s", fn.Type())
 }
 
 func unwrapReturnValue(obj object.Object) object.Object {
