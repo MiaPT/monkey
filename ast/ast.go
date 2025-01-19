@@ -107,17 +107,20 @@ func (es *ExpressionStatement) String() string {
 }
 
 // --- AssignStatement ---
+/* 
 
-type AssignStatement struct {
+*/
+
+type AssignExpression struct {
 	Token token.Token
 	Left  Expression // identifier or index expression
 	Right Expression
 }
 
-func (as *AssignStatement) statementNode()       {}
-func (as *AssignStatement) TokenLiteral() string { return as.Token.Literal }
+func (as *AssignExpression) expressionNode()      {}
+func (as *AssignExpression) TokenLiteral() string { return as.Token.Literal }
 
-func (as *AssignStatement) String() string {
+func (as *AssignExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(as.Left.String())

@@ -55,6 +55,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GTOE, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
+	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
 
 	return p
 }
@@ -79,6 +80,7 @@ type (
 const (
 	_ int = iota
 	LOWEST
+	ASSIGN
 	EQUALS      // == or !=
 	LESSGREATER // > or <
 	SUM         // + or -
@@ -86,7 +88,6 @@ const (
 	PREFIX      // -X or !X
 	CALL        // myFunction(X)
 	INDEX
-	ASSIGN
 )
 
 var precedences = map[token.TokenType]int{
@@ -145,33 +146,22 @@ func (p *Parser) ParseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		if p.currentToken.Type == token.IDENT {
-			var s = p.parseAssignStatement()
-			if s != nil {
-				return s
-			}
-		}
 		return p.parseExpressionStatement()
 	}
 }
 
-func (p *Parser) parseAssignStatement() ast.Statement {
-	if !p.peekTokenIs(token.ASSIGN) {
-		return nil
-	}
-	left := p.parseIdentifier()
+func (p *Parser) parseAssignExpression(left ast.Expression) ast.Expression {
 
-	assignStatement := &ast.AssignStatement{Token: p.currentToken, Left: left}
+	assignExpression := &ast.AssignExpression{Token: p.currentToken, Left: left}
 
-	p.nextToken()
 	p.nextToken()
 	right := p.parseExpression(LOWEST)
-	assignStatement.Right = right
+	assignExpression.Right = right
 
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
-	return assignStatement
+	return assignExpression
 }
 
 func (p *Parser) parseExpression(prevPrecedence int) ast.Expression {

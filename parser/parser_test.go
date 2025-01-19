@@ -70,8 +70,12 @@ func TestAssignStatements(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		statement := program.Statements[i]
-		if !testAssignStatement(t, statement, tt.expectedIdentifier) {
+		expression, ok := program.Statements[i].(*ast.ExpressionStatement).Expression.(*ast.AssignExpression)
+		if !ok {
+			t.Errorf("expression not *ast.AssignExpression. got %T", expression)
+			return
+		}
+		if !testAssignExpression(t, expression.Left, tt.expectedIdentifier) {
 			return
 		}
 	}
@@ -146,28 +150,11 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	return true
 }
 
-func testAssignStatement(t *testing.T, s ast.Statement, name string) bool {
+func testAssignExpression(t *testing.T, s ast.Expression, name string) bool {
 	if s.TokenLiteral() != name {
 		t.Errorf("TokenLiteral not '%s', got=%q", name, s.TokenLiteral())
 		return false
 	}
-
-	_, ok := s.(*ast.AssignStatement)
-	if !ok {
-		t.Errorf("s not *ast.AssignStatement. got %T", s)
-		return false
-	}
-
-	// if assignStatement.TokenLiteral.Value != name {
-	// 	t.Errorf("letStatement.Name.Value not %s. got %s", name, letStatement.Name.Value)
-	// 	return false
-	// }
-
-	// if letStatement.Name.TokenLiteral() != name {
-	// 	t.Errorf("letStmt.Name.TokenLiteral() not '%s'. got %s",
-	// 		name, letStatement.Name.TokenLiteral())
-	// 	return false
-	// }
 
 	return true
 }

@@ -85,8 +85,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		env.Set(node.Name.Value, val)
 
-	case *ast.AssignStatement:
-		return evalAssignStatement(node, env)
+	case *ast.AssignExpression:
+		return evalAssignExpression(node, env)
 
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
@@ -143,19 +143,19 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 
 }
 
-func evalAssignStatement(node *ast.AssignStatement, env *object.Environment) object.Object {
+func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) object.Object {
 
 	right := Eval(node.Right, env)
 	if isError(right) {
 		return right
 	}
 
-	_, ok := env.Get(node.TokenLiteral())
+	_, ok := env.Get(node.Left.TokenLiteral())
 	if !ok {
-		return newError("variable not defined: %s", node.TokenLiteral())
+		return newError("variable not defined: %s", node.Left.TokenLiteral())
 	}
 
-	env.Set(node.TokenLiteral(), right)
+	env.Set(node.Left.TokenLiteral(), right)
 
 	return nil
 }
