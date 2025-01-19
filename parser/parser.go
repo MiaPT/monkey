@@ -86,6 +86,7 @@ const (
 	PREFIX      // -X or !X
 	CALL        // myFunction(X)
 	INDEX
+	ASSIGN
 )
 
 var precedences = map[token.TokenType]int{
@@ -101,6 +102,7 @@ var precedences = map[token.TokenType]int{
 	token.ASTERISK: PRODUCT,
 	token.LPAREN:   CALL,
 	token.LBRACKET: INDEX,
+	token.ASSIGN:   ASSIGN,
 }
 
 func (p *Parser) peekPrecedence() int {
@@ -143,8 +145,33 @@ func (p *Parser) ParseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
+		if p.currentToken.Type == token.IDENT {
+			var s = p.parseAssignStatement()
+			if s != nil {
+				return s
+			}
+		}
 		return p.parseExpressionStatement()
 	}
+}
+
+func (p *Parser) parseAssignStatement() ast.Statement {
+	if !p.peekTokenIs(token.ASSIGN) {
+		return nil
+	}
+	left := p.parseIdentifier()
+
+	assignStatement := &ast.AssignStatement{Token: p.currentToken, Left: left}
+
+	p.nextToken()
+	p.nextToken()
+	right := p.parseExpression(LOWEST)
+	assignStatement.Right = right
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	return assignStatement
 }
 
 func (p *Parser) parseExpression(prevPrecedence int) ast.Expression {

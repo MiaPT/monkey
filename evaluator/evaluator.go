@@ -85,6 +85,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		env.Set(node.Name.Value, val)
 
+	case *ast.AssignStatement:
+		return evalAssignStatement(node, env)
+
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 
@@ -138,6 +141,23 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 
 	return newError("identifier not found: " + node.Value)
 
+}
+
+func evalAssignStatement(node *ast.AssignStatement, env *object.Environment) object.Object {
+
+	right := Eval(node.Right, env)
+	if isError(right) {
+		return right
+	}
+
+	_, ok := env.Get(node.TokenLiteral())
+	if !ok {
+		return newError("variable not defined: %s", node.TokenLiteral())
+	}
+
+	env.Set(node.TokenLiteral(), right)
+
+	return nil
 }
 
 func evalInfixExpression(operator string, left object.Object, right object.Object) object.Object {

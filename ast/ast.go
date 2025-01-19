@@ -106,6 +106,27 @@ func (es *ExpressionStatement) String() string {
 	return ""
 }
 
+// --- AssignStatement ---
+
+type AssignStatement struct {
+	Token token.Token
+	Left  Expression // identifier or index expression
+	Right Expression
+}
+
+func (as *AssignStatement) statementNode()       {}
+func (as *AssignStatement) TokenLiteral() string { return as.Token.Literal }
+
+func (as *AssignStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(as.Left.String())
+	out.WriteString(" = ")
+	out.WriteString(as.Right.String())
+
+	return out.String()
+}
+
 // --- Identifier ---
 
 type Identifier struct {
