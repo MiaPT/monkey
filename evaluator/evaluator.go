@@ -86,6 +86,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		env.Set(node.Name.Value, val)
 
 	case *ast.AssignExpression:
+
 		return evalAssignExpression(node, env)
 
 	case *ast.Identifier:
@@ -150,14 +151,60 @@ func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) o
 		return right
 	}
 
-	_, ok := env.Get(node.Left.TokenLiteral())
-	if !ok {
-		return newError("variable not defined: %s", node.Left.TokenLiteral())
+	switch node.Left.(type) {
+	case *ast.Identifier:
+		_, ok := env.Get(node.Left.TokenLiteral())
+		if !ok {
+			return newError("undefined: %s", node.Left.TokenLiteral())
+		}
+
+		env.Set(node.Left.TokenLiteral(), right)
+
+		return right
+
+	case *ast.IndexExpression:
+
+		ie := node.Left.(*ast.IndexExpression)
+
+		ident := ie.Left.(*ast.Identifier)
+		_, ok := env.Get(ident.String())
+
+		if !ok {
+			return newError("Undefined: %s", ident.String())
+		}
+
+		value := Eval(ident, env)
+
+		if _, ok := value.(*object.Array); ok {
+			return evalArrayIndexAssignment(ie, right, env)
+		}
+
 	}
 
-	env.Set(node.Left.TokenLiteral(), right)
+	return NULL
+}
 
-	return nil
+func evalArrayIndexAssignment(node *ast.IndexExpression, value object.Object, env *object.Environment) object.Object {
+	index := Eval(node.Index, env)
+
+	i, ok := index.(*object.Integer)
+	if !ok {
+		return newError("index must be an integer")
+	}
+
+	ident := node.Left.(*ast.Identifier)
+
+	currentArr := Eval(ident, env).(*object.Array)
+
+	arr := currentArr.Elements
+
+	if len(arr) <= int(i.Value) || int(i.Value) < 0 {
+		return newError("index out of range")
+	}
+
+	arr[i.Value] = value
+	return &object.Array{Elements: arr}
+
 }
 
 func evalInfixExpression(operator string, left object.Object, right object.Object) object.Object {
