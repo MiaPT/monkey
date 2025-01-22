@@ -179,6 +179,10 @@ func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) o
 			return evalArrayIndexAssignment(ie, right, env)
 		}
 
+		if _, ok := value.(*object.Hash); ok {
+			return evalHashIndexAssignment(ie, right, env)
+		}
+
 	}
 
 	return NULL
@@ -204,6 +208,22 @@ func evalArrayIndexAssignment(node *ast.IndexExpression, value object.Object, en
 
 	arr[i.Value] = value
 	return &object.Array{Elements: arr}
+
+}
+
+func evalHashIndexAssignment(node *ast.IndexExpression, value object.Object, env *object.Environment) object.Object {
+	key := Eval(node.Index, env)
+	if _, ok := key.(object.Hashable); !ok {
+		return newError("invalid key: %s", key.Type())
+	}
+
+	ident := node.Left.(*ast.Identifier)
+
+	current := Eval(ident, env).(*object.Hash)
+
+	current.Pairs[key.(object.Hashable).HashKey()] = object.HashPair{Key: key, Value: value}
+
+	return current
 
 }
 
