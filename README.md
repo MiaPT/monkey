@@ -11,6 +11,11 @@ because why not
 ### added support for reassigning variables and array elements, and reassigning/adding hashmap elements
 In Monkey, you cannot reassign variables*, array elements or hashmap elements, or add to a hashmap. But it felt weird to be able to do that, so I decided to add it.
 ```
+>> let myVar = 5
+>> myVar = 10
+>> myVar
+10
+
 >> let myList = [1,2,3]
 >> myList[0] = 5
 >> myList
